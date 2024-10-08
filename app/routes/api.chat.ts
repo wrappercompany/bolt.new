@@ -3,6 +3,8 @@ import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/lib/.server/llm/constants';
 import { CONTINUE_PROMPT } from '~/lib/.server/llm/prompts';
 import { streamText, type Messages, type StreamingOptions } from '~/lib/.server/llm/stream-text';
 import SwitchableStream from '~/lib/.server/llm/switchable-stream';
+import { parseAIResponse, executeAction } from '~/lib/ai-actions';
+import { webcontainer } from '~/lib/webcontainer';
 
 export async function action(args: ActionFunctionArgs) {
   return chatAction(args);
@@ -35,6 +37,14 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         const result = await streamText(messages, context.cloudflare.env, options);
 
         return stream.switchSource(result.toAIStream());
+      },
+      onCompletion: async (completion: string) => {
+        const actions = parseAIResponse(completion);
+        for (const action of actions) {
+          await executeAction(action, await webcontainer);
+        }
+        // Update UI or send response to client
+        stream.write(JSON.stringify({ type: 'actionsComplete' }));
       },
     };
 

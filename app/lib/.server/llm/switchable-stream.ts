@@ -63,4 +63,9 @@ export default class SwitchableStream extends TransformStream {
   get switches() {
     return this._switches;
   }
+
+  write(chunk: string) {
+    // Implement the logic to write to the stream
+    // This might involve using the underlying WritableStream
+  }
 }

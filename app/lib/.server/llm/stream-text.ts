@@ -3,6 +3,8 @@ import { getAPIKey } from '~/lib/.server/llm/api-key';
 import { getAnthropicModel } from '~/lib/.server/llm/model';
 import { MAX_TOKENS } from './constants';
 import { getSystemPrompt } from './prompts';
+import { parseAIResponse, executeAction } from '~/lib/ai-actions';
+import { webcontainer } from '~/lib/webcontainer';
 
 interface ToolResult<Name extends string, Args, Result> {
   toolCallId: string;
@@ -31,5 +33,16 @@ export function streamText(messages: Messages, env: Env, options?: StreamingOpti
     },
     messages: convertToCoreMessages(messages),
     ...options,
+    onToken: (token: string) => {
+      // Process tokens in real-time if needed
+      options?.onToken?.(token);
+    },
+    onCompletion: async (completion: string) => {
+      const actions = parseAIResponse(completion);
+      for (const action of actions) {
+        await executeAction(action, await webcontainer);
+      }
+      options?.onCompletion?.(completion);
+    },
   });
 }

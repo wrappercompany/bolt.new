@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import type { Message } from 'ai';
 import { useChat } from 'ai/react';
 import { useAnimate } from 'framer-motion';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState, useCallback } from 'react';
 import { cssTransition, toast, ToastContainer } from 'react-toastify';
 import { useMessageParser, usePromptEnhancer, useShortcuts, useSnapScroll } from '~/lib/hooks';
 import { useChatHistory } from '~/lib/persistence';
@@ -197,6 +197,23 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
   };
 
   const [messageRef, scrollRef] = useSnapScroll();
+
+  const handleAIResponse = useCallback((response: any) => {
+    if (response.type === 'actionsComplete') {
+      // Update UI to reflect completed actions
+      workbenchStore.refreshWorkbench();
+    }
+  }, []);
+
+  useEffect(() => {
+    // Set up event listener for AI responses
+    const eventSource = new EventSource('/api/chat');
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      handleAIResponse(data);
+    };
+    return () => eventSource.close();
+  }, [handleAIResponse]);
 
   return (
     <BaseChat

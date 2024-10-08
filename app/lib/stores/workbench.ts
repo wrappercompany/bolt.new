@@ -267,9 +267,22 @@ export class WorkbenchStore {
     artifact.runner.runAction(data);
   }
 
+  addFile(path: string) {
+    // Logic to add a new file to the workbench UI
+  }
+
+  updateTerminalOutput(output: string) {
+    // Logic to update terminal output in the UI
+  }
+
   #getArtifact(id: string) {
     const artifacts = this.artifacts.get();
     return artifacts[id];
+  }
+
+  refreshWorkbench() {
+    // Implement the logic to refresh the workbench UI
+    // This might involve updating file lists, terminal output, etc.
   }
 }
 
